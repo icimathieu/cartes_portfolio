@@ -9,13 +9,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          lfs: true
 
-      - name: Push to Hugging Face
+      - name: Install huggingface_hub
+        run: pip install huggingface_hub
+
+      - name: Upload to HF Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git remote add hf https://huggingface.co/spaces/icimathieu/cartes_portfolio || true
-          git push --force https://icimathieu:$HF_TOKEN@huggingface.co/spaces/icimathieu/cartes_portfolio main
+          python - <<'EOF'
+          import os
+          from huggingface_hub import HfApi
+
+          api = HfApi()
+          api.upload_folder(
+              folder_path=".",
+              repo_id="icimathieu/cartes_portfolio",
+              repo_type="space",
+              token=os.environ["HF_TOKEN"],
+              ignore_patterns=[
+                  ".git/*",
+                  ".github/*",
+                  ".claude/*",
+                  ".gitignore",
+              ],
+          )
+          print("Upload terminé.")
+          EOF
