@@ -1,15 +1,18 @@
 import json
+import sys
 import streamlit as st
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from footer import render_footer
 
 st.title("🖼️ Exemples de cartes postales géolocalisées")
 
 st.markdown("""
-Voici une sélection de 20 cartes postales du corpus, toutes correctement
-géolocalisées par la pipeline sur les trois niveaux (commune, lieu-dit, monument).
+Voici une sélection de 20 cartes postales du corpus, toutes géolocalisées 
+par la pipeline sur les trois niveaux (commune, lieu-dit, monument).
 Les cas marqués **Bonus** correspondent à des cartes géolocalisées
 sans texte de localisation visible — le modèle s'appuie alors sur le contenu
-visuel seul.
+visuel seul ou notre système de mémorisation des cartes déjà traitées.
 """)
 
 st.markdown("---")
@@ -73,3 +76,14 @@ for i in range(0, len(image_files), 2):
                 f"| Monument | {monument} |"
             )
             st.markdown("---")
+
+st.markdown("---")
+st.info(
+    "📄 **Code source et données** : "
+    "[github.com/icimathieu/cartes_portfolio](https://github.com/icimathieu/cartes_portfolio)"
+    "\n\n✉️ Contact : "
+    "[mathieu.rivere@chartes.psl.eu](mailto:mathieu.rivere@chartes.psl.eu) · "
+    "[maxime.letoffe@chartes.psl.eu](mailto:maxime.letoffe@chartes.psl.eu)"
+)
+
+render_footer()

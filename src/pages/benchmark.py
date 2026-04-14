@@ -1,39 +1,43 @@
 import streamlit as st
+import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from footer import render_footer
 
 st.title("📊 Benchmark — 600 cartes postales")
 
 st.markdown("""
-Le benchmark évalue la pipeline sur un corpus annoté manuellement de **600 cartes
-postales**. Chaque carte est jugée sur trois niveaux : commune, lieu-dit et monument.
-Les 8 cas intrinsèquement ambigus sont exclus, soit un corpus final de **592 cartes**.
+Le *benchmark* (évaluation) évalue la *pipeline* (chaîne de traitement) sur un corpus annoté manuellement de **600 cartes
+postales**, sur les 3000 cartes postales de notre corpus (les 300 premières et les 300 dernières par ordre alphabétique). Chaque carte est jugée sur trois niveaux : commune, lieu-dit et monument.
+Les 8 cas intrinsèquement ambigus quant à notre guide d'évaluation (disponible ci-dessous) sont exclus, soit un corpus final de **592 cartes**.
 
 Trois configurations sont comparées :
 """)
 
 # --- Sélecteur de configuration ---
 CONFIGS = {
-    "Modèle seul": {
-        "key": "modele_seul",
+        "Toute la chaîne de traitement": {
+        "key": "chaine_complete",
         "desc": (
-            "Le modèle VLM (Gemini) analyse la carte postale sans aucune information "
-            "contextuelle. C'est la configuration la plus exigeante."
+            "Le nom de l'édifice et la commune, lorsqu'ils sont disponibles dans les "
+            "métadonnées de l'archive, sont fournis au modèle. Des formes de mémorisation" 
+            "de la carte précédente et de recherche web automatisée ont aussi été implémentées."
         ),
     },
-    "Avec commune scrapée": {
+        "Avec commune extraite": {
         "key": "avec_commune",
         "desc": (
             "La commune d'origine, lorsqu'elle est disponible dans les métadonnées "
-            "de l'archive, est fournie au modèle comme contexte supplémentaire."
+            "de l'archive, après avoir été extraite du site, est fournie au modèle comme contexte supplémentaire."
         ),
     },
-    "Avec édifice + commune": {
-        "key": "avec_edifice_commune",
+    "Modèle seul": {
+        "key": "modele_seul",
         "desc": (
-            "Le nom de l'édifice et la commune, lorsqu'ils sont disponibles dans les "
-            "métadonnées de l'archive, sont fournis au modèle."
+            "Le modèle VLM (QWEN3-VL 8B) analyse la carte postale sans aucune information "
+            "contextuelle. C'est la configuration la plus exigeante."
         ),
-    },
+    }
 }
 
 selected_label = st.selectbox(
@@ -62,16 +66,16 @@ if summary_path.exists():
 st.markdown("---")
 
 # --- Plots ---
-st.subheader("Résultats détaillés")
+st.subheader("Résultats détaillés : ")
 
 PLOT_LABELS = {
     "01_overview_by_level.png": "Vue d'ensemble par niveau",
     "04_card_level_summary.png": "Lecture exécutive",
-    "06_recall_proxy.png": "Rappel proxy par niveau",
+    "06_recall_proxy.png": "Rappel : la capacité à donner la commune lorsqu'elle est disponible (ou équivalent).",
     "05_bonus_cases.png": "Cas bonus (géolocalisation sans texte)",
     "03_error_types.png": "Types d'erreurs",
     "02_status_split.png": "Répartition correct / erreur / manquant",
-    "07_cross_errors.png": "Erreurs croisées et swaps",
+    "07_cross_errors.png": "Erreurs croisées et inversement parmi les niveaux de précision",
     "08_error_types_pct.png": "Types d'erreurs (%)",
     "09_quality_metrics_by_category.png": "Métriques de qualité par catégorie",
 }
@@ -82,10 +86,10 @@ PLOT_ORDER = [
     "04_card_level_summary.png",
     "06_recall_proxy.png",
     "05_bonus_cases.png",
-    "03_error_types.png",
     "02_status_split.png",
+    "03_error_types_pct.png",
+    "08_error_types.png",
     "07_cross_errors.png",
-    "08_error_types_pct.png",
     "09_quality_metrics_by_category.png",
 ]
 
@@ -104,9 +108,9 @@ if plots_dir.exists():
 else:
     st.warning("Plots introuvables pour cette configuration.")
 
-# --- Lecture client ---
+# --- Lecture client : ---
 st.markdown("---")
-st.subheader("Lecture client")
+st.subheader("Lecture client : ")
 
 if summary_path.exists():
     # Extraire la section Lecture client
@@ -126,7 +130,30 @@ if summary_path.exists():
     else:
         st.info("Section de lecture client non disponible pour cette configuration.")
 
-# --- Accès au notebook ---
+# --- Guide d'évaluation : ---
+st.markdown("---")
+st.caption(
+    "📓 Le guide complet d'évaluation (ce que sont des erreurs, ce que sont des succès) est disponible ici : "
+    "[guide_benchmark.md]"
+    "(https://github.com/icimathieu/cartes_portfolio/blob/main/"
+    "assets/benchmark/guide_benchmark.md)")
+
+# --- Accès aux fichiers d'évaluation : ---
+st.markdown("---")
+st.caption(
+    "📓 L'ensemble des métriques calculées et nos évaluations manuelles sont disponibles : "
+    "[avec_edifice_commune]"
+    "(https://github.com/icimathieu/cartes_portfolio/blob/main/"
+    "assets/benchmark/avec_edifice_commune)"
+    "[avec_commune]"
+    "(https://github.com/icimathieu/cartes_portfolio/blob/main/"
+    "assets/benchmark/avec_commune)"
+    "[modele_seul]"
+    "(https://github.com/icimathieu/cartes_portfolio/blob/main/"
+    "assets/benchmark/modele_seul)"
+)
+
+# --- Accès au notebook : ---
 st.markdown("---")
 st.caption(
     "📓 Le notebook complet de benchmark est disponible dans le dépôt : "
@@ -134,3 +161,12 @@ st.caption(
     "(https://github.com/icimathieu/cartes_portfolio/blob/main/"
     "assets/benchmark/benchmark_300_cartes_vaucluse.ipynb)"
 )
+st.info(
+    "📄 **Code source et données** : "
+    "[github.com/icimathieu/cartes_portfolio](https://github.com/icimathieu/cartes_portfolio)"
+    "\n\n✉️ Contact : "
+    "[mathieu.rivere@chartes.psl.eu](mailto:mathieu.rivere@chartes.psl.eu) · "
+    "[maxime.letoffe@chartes.psl.eu](mailto:maxime.letoffe@chartes.psl.eu)"
+)
+
+render_footer()

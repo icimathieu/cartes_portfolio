@@ -1,4 +1,8 @@
 import streamlit as st
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from footer import render_footer
 
 st.title("🔧 Essayer la pipeline")
 
@@ -32,3 +36,14 @@ st.file_uploader(
 )
 
 st.caption("Revenez bientôt — cette fonctionnalité sera disponible dans une prochaine version.")
+
+st.markdown("---")
+st.info(
+    "📄 **Code source et données** : "
+    "[github.com/icimathieu/cartes_portfolio](https://github.com/icimathieu/cartes_portfolio)"
+    "\n\n✉️ Contact : "
+    "[mathieu.rivere@chartes.psl.eu](mailto:mathieu.rivere@chartes.psl.eu) · "
+    "[maxime.letoffe@chartes.psl.eu](mailto:maxime.letoffe@chartes.psl.eu)"
+)
+
+render_footer()

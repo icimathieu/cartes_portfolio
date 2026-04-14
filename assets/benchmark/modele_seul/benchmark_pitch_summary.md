@@ -65,37 +65,12 @@ Pour l essentiel, ces confusions correspondent a des lectures de noms d imprimeu
 - Monument : monument_partiel (1)
 
 ## Lecture client
-Ce benchmark a ete construit sur un corpus large de 600 cartes postales, avec exclusion des seuls cas juges intrinsequement ambigus (hors de nos règles d'évaluation définies dans guide_benchmark.md). Tous les pourcentages presentes ci dessous sont calcules sur le corpus benchmarke, hors cas_ambigu.
+Ce benchmark a été construit sur un corpus large de 600 cartes postales, avec exclusion des seuls cas jugés intrinsèquement ambigus (hors de nos règles d'évaluation définies dans guide_benchmark.md). Tous les pourcentages présentés ci-dessous sont calculés sur le corpus benchmarké, hors cas_ambigu.
 
-Le resultat principal est solide : 454 cartes sur 592 benchmarkees sont justes simultanement sur les trois niveaux de precision. A chaque niveau, la couverture est tres elevee sur le lieu dit et le monument, et reste forte sur la commune. Les 31 cas bonus find_else montrent en plus que le modele sait retrouver un lieu meme quand la carte ne fournit pas de texte de localisation explicite.
+Le résultat principal est solide : 454 cartes sur 592 benchmarkées sont justes simultanément sur les trois niveaux de précision. À chaque niveau, la couverture est tres élevée sur le lieu-dit et le monument, et reste forte sur la commune. Les 31 cas bonus find_else montrent en plus que le modele sait retrouver un lieu même quand la carte ne fournit pas de texte de localisation explicite.
 
-Le taux d hallucination reste tres faible pour un systeme generatif : 18 hallucinations sur 1776 predictions, soit 1.01%. C est un argument fort en contexte client, car il montre que le pipeline ne remplit pas arbitrairement les champs et conserve un comportement globalement fiable.
+Le taux d'hallucination reste très faible pour un système génératif : 18 hallucinations sur 1776 predictions, soit 1.01%. C est un argument fort, car il montre que le pipeline ne remplit pas arbitrairement les champs et conserve un comportement globalement fiable, malgré son caractère "génératif".
 
-Les confusions residuelles sont elles aussi lisibles et pilotables : 80 cas sur 1776 predictions, soit 4.50%. Elles proviennent pour l essentiel de formulations editoriales ou descriptives comme les noms d imprimeurs et les mentions du type vue depuis X. Cela ouvre des pistes d amelioration tres concretes par filtrage contextuel et regles de desambiguisation.
+Les confusions résiduelles sont elles aussi lisibles et pilotables : 80 cas sur 1776 prédictions, soit 4.50%. Elles proviennent pour l'essentiel de formulations éditoriales ou descriptives comme les noms d'imprimeurs et les mentions du type "vue depuis X" où X, lieu de la prise de la photographie, est interprété comme le lieu photographié. Cela ouvre des pistes d'amélioration très concrètes par filtrage contextuel et règles de désambiguisation.
 
-Une part significative des erreurs restantes correspond a des erreurs de granularite ou a des swaps entre niveaux (4.6%), plutot qu a une localisation totalement hors sujet. Le pipeline est donc souvent proche du bon resultat, avec des marges d amelioration credibles par regles de coherence, post traitement et enrichissement par bases externes.
-
-### 1. Vue d ensemble
-Le graphique ci dessous synthetise la couverture et l exactitude sur cartes couvertes pour les trois niveaux de precision. Il donne une lecture immediate de la robustesse globale du pipeline, sans ajouter une troisieme metrique redondante.
-
-![Performance par niveau](../plots_benchmark_300/01_overview_by_level.png)
-
-### 2. Lecture executive
-Cette vue ramasse le benchmark en quelques chiffres simples : part de cartes entierement correctes, volume d erreurs, poids des cas bonus et place des erreurs croisees. C est le visuel le plus utile pour une slide de synthese ou une page de proposition.
-
-![Lecture executive](../plots_benchmark_300/04_card_level_summary.png)
-
-### 3. Rappel et capacite a ne pas manquer un lieu
-Le rappel proxy permet d estimer a quel point le pipeline evite de passer a cote d une information de localisation quand elle est effectivement presente. Il ressort particulierement haut pour la commune et le monument, et reste le plus exigeant sur le lieu dit.
-
-![Rappel proxy](../plots_benchmark_300/06_recall_proxy.png)
-
-### 4. Cas a forte valeur ajoutee
-Les cas bonus find_else mettent en evidence la capacite du modele a mobiliser des indices visuels et contextuels au dela du simple texte imprime. Pour un client, cela montre que la solution ne se limite pas a de l OCR, mais apporte une lecture semantique utile sur des documents patrimoniaux complexes.
-
-![Cas bonus](../plots_benchmark_300/05_bonus_cases.png)
-
-### 5. Nature des erreurs restantes
-Le dernier visuel montre que les erreurs residuelles se concentrent sur quelques familles identifiables. Elles sont donc pilotables et peuvent etre transformees en feuille de route d amelioration.
-
-![Types d erreurs](../plots_benchmark_300/03_error_types.png)
+Une part significative des erreurs restantes correspond à des erreurs de granularité ou à des inversements entre niveaux (4.6%), plutôt qu'à une localisation totalement hors sujet. Le pipeline est donc souvent proche du bon résultat, avec des marges d'amélioration crédibles par règles de cohérence, post-traitement et enrichissement par bases de données externes.
