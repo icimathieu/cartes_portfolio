@@ -87,8 +87,8 @@ PLOT_ORDER = [
     "06_recall_proxy.png",
     "05_bonus_cases.png",
     "02_status_split.png",
-    "03_error_types_pct.png",
-    "08_error_types.png",
+    "03_error_types.png",
+    "08_error_types_pct.png",
     "07_cross_errors.png",
     "09_quality_metrics_by_category.png",
 ]
@@ -142,9 +142,9 @@ st.caption(
 st.markdown("---")
 st.caption(
     "📓 L'ensemble des métriques calculées et nos évaluations manuelles sont disponibles : "
-    "[avec_edifice_commune]"
+    "[chaine_complete]"
     "(https://github.com/icimathieu/cartes_portfolio/blob/main/"
-    "assets/benchmark/avec_edifice_commune)"
+    "assets/benchmark/chaine_complete)"
     "[avec_commune]"
     "(https://github.com/icimathieu/cartes_portfolio/blob/main/"
     "assets/benchmark/avec_commune)"
