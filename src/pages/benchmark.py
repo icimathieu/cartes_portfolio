@@ -132,16 +132,16 @@ if summary_path.exists():
 
 # --- Guide d'évaluation : ---
 st.markdown("---")
-st.caption(
-    "📓 Le guide complet d'évaluation (ce que sont des erreurs, ce que sont des succès) est disponible ici : "
+st.markdown(
+    "📓 Le **guide complet d'évaluation** (ce que sont des erreurs, ce que sont des succès) est disponible ici : "
     "[guide_benchmark.md]"
     "(https://github.com/icimathieu/cartes_portfolio/blob/main/"
     "assets/benchmark/guide_benchmark.md)")
 
 # --- Accès aux fichiers d'évaluation : ---
 st.markdown("---")
-st.caption(
-    "📓 L'ensemble des métriques calculées et nos évaluations manuelles sont disponibles : "
+st.markdown(
+    "📓 L'ensemble des **métriques** calculées et nos **évaluations manuelles** sont disponibles : "
     "[chaine_complete]"
     "(https://github.com/icimathieu/cartes_portfolio/blob/main/"
     "assets/benchmark/chaine_complete)"
@@ -155,12 +155,14 @@ st.caption(
 
 # --- Accès au notebook : ---
 st.markdown("---")
-st.caption(
-    "📓 Le notebook complet de benchmark est disponible dans le dépôt : "
+st.markdown(
+    "📓 Le **notebook** complet de benchmark est disponible dans le dépôt : "
     "[benchmark_300_cartes_vaucluse.ipynb]"
     "(https://github.com/icimathieu/cartes_portfolio/blob/main/"
     "assets/benchmark/benchmark_300_cartes_vaucluse.ipynb)"
 )
+st.markdown("---")
+
 st.info(
     "📄 **Code source et données** : "
     "[github.com/icimathieu/cartes_portfolio](https://github.com/icimathieu/cartes_portfolio)"

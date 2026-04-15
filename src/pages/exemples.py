@@ -77,11 +77,11 @@ for i in range(0, len(image_files), 2):
             )
             st.markdown("---")
 
-st.markdown("---")
 st.info(
     "📄 **Code source et données** : "
     "[github.com/icimathieu/cartes_portfolio](https://github.com/icimathieu/cartes_portfolio)"
-    "\n\n✉️ Contact : "
+    "\n\n" \
+    "✉️ **Contact** : "
     "[mathieu.rivere@chartes.psl.eu](mailto:mathieu.rivere@chartes.psl.eu) · "
     "[maxime.letoffe@chartes.psl.eu](mailto:maxime.letoffe@chartes.psl.eu)"
 )

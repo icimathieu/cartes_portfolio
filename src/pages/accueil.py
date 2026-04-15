@@ -115,6 +115,7 @@ discutant et l'expliquant avec des archivistes.
 Si une telle proposition vous intéresse, contactez : [mathieu.riviere@chartes.psl.eu](mailto:mathieu.riviere@chartes.psl.eu) ou [maxime.letoffe@chartes.psl.eu](mailto:maxime.letoffe@chartes.psl.eu)
 """)
 
+st.markdown("---")
 
 st.info(
     "📄 **Code source et données du projet original** : "
