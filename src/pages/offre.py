@@ -105,10 +105,37 @@ notre temps personnel : consolidation de la chaîne, benchmark sur 600 cartes an
 intégration finale sur le site des Archives, rédaction d'un billet,
 documentation, généralisation de la méthode, etc.
             
-C'est un projet très enrichissant, qui nous permet de mobiliser des outils 
-récents et performants que nous rencontrons par ailleurs durant nos cours. 
-C'est aussi une façon pour nous de valoriser nos compétences et d'avoir 
-une formation très empirique ! 
+C'est un projet très enrichissant, qui nous permet de mobiliser des outils
+récents et performants que nous rencontrons par ailleurs durant nos cours.
+C'est aussi une façon pour nous de valoriser nos compétences et d'avoir
+une formation très empirique !
+""")
+
+st.markdown("---")
+
+# --- CartaData ---
+st.subheader("Un cadre institutionnel : CartaData")
+
+st.markdown("""
+Nous intervenons dans le cadre de **[CartaData](https://www.chartes.psl.eu/vie-de-campus/vie-etudiante-et-associative/cartadata)**,
+la junior-entreprise de l'École nationale des chartes — PSL, fondée en 2025 et
+coordonnée par Chahan Vidal-Gorène, directeur du master *Humanités numériques*.
+
+CartaData met les compétences académiques de ses membres au service
+d'institutions patrimoniales et d'acteurs privés, autour de trois pôles :
+
+- **Transcription** : transcription manuelle ou automatisée (français, latin),
+  recherche bibliographique, catalogage, conseil en numérisation
+- **Données** : structuration (XML, JSON, CSV), nettoyage de jeux de données,
+  web-scraping, interrogation d'API, visualisation
+- **Conseil** : analyse des besoins, stratégies de valorisation, modélisation
+  de bases, intégration d'outils d'IA
+
+S'appuyer sur CartaData, c'est pour vous l'assurance d'un **cadre
+administratif et juridique sûr** : conventions, facturation, comptabilité
+et responsabilités sont pris en charge par l'association, sous la
+supervision de l'École. Vous contractez avec une structure reconnue,
+adossée à un établissement du groupe PSL.
 """)
 
 st.markdown("---")
