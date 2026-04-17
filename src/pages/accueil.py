@@ -104,16 +104,14 @@ st.markdown("""
 
 st.markdown("---")
 
-st.subheader("Offre de service : ")
-# --- offre ---
+st.subheader("Vous avez un fonds de cartes postales ?")
+
 st.markdown("""
-Capables d'adapter cette chaîne de traitement à un jeu spécifique de cartes postales, nous proposons, à partir d'un set d'images, 
-de réaliser l'ensemble des tâches décrites ci-dessus jusqu'à produire une carte web interactive. Les niveaux de précision, le géoréférencement ou autre
-peuvent être personnalisés. De même, nous pourrions utiliser de meilleurs modèles d'IA, numériser certaines archives, céder notre code en le
-discutant et l'expliquant avec des archivistes. 
-            
-Si une telle proposition vous intéresse, contactez : [mathieu.riviere@chartes.psl.eu](mailto:mathieu.riviere@chartes.psl.eu) ou [maxime.letoffe@chartes.psl.eu](mailto:maxime.letoffe@chartes.psl.eu)
+Nous adaptons cette chaîne de traitement à votre corpus, de la récupération
+des images à la carte interactive intégrable sur votre site.
 """)
+
+st.page_link("pages/offre.py", label="Découvrir notre offre", icon="🤝")
 
 st.markdown("---")
 
