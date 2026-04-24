@@ -84,7 +84,6 @@ with col_b:
     st.markdown("""
     - 🤖 **Choix du modèle d'IA** : local (confidentialité maximale, QWEN3-VL) ou
       distant (Gemini, plus performant mais via les serveurs Google)
-    - 🌐 **Intégration au site** par nos soins, en lien avec vos équipes
     - 📦 **Cession du code** et documentation pour maintenance interne
     """)
 
