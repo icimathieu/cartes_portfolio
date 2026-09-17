@@ -57,7 +57,7 @@ st.markdown("""
           ▼
    ┌──────────────┐
    │  Modèle VLM  │  Analyse visuelle et textuelle
-   │    (QWEN)    │  de chaque carte postale
+   │  (Qwen2.5)   │  de chaque carte postale
    └──────┬───────┘
           │
           ▼

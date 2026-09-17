@@ -34,7 +34,7 @@ CONFIGS = {
     "Modèle seul": {
         "key": "modele_seul",
         "desc": (
-            "Le modèle VLM (QWEN3-VL 8B) analyse la carte postale sans aucune information "
+            "Le modèle VLM (Qwen2.5-VL) analyse la carte postale sans aucune information "
             "contextuelle. C'est la configuration la plus exigeante."
         ),
     }

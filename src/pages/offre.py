@@ -82,7 +82,7 @@ with col_a:
 
 with col_b:
     st.markdown("""
-    - 🤖 **Choix du modèle d'IA** : local (confidentialité maximale, QWEN3-VL) ou
+    - 🤖 **Choix du modèle d'IA** : local (confidentialité maximale, Qwen2.5-VL) ou
       distant (Gemini, plus performant mais via les serveurs Google)
     - 📦 **Cession du code** et documentation pour maintenance interne
     """)
