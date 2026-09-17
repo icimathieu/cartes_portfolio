@@ -31,7 +31,7 @@ st.info(
     "[github.com/icimathieu/cartes_portfolio](https://github.com/icimathieu/cartes_portfolio)"
     "\n\n" \
     "✉️ **Contact** : "
-    "[mathieu.rivere@chartes.psl.eu](mailto:mathieu.rivere@chartes.psl.eu) · "
+    "[mathieu.riviere@chartes.psl.eu](mailto:mathieu.riviere@chartes.psl.eu) · "
     "[maxime.letoffe@chartes.psl.eu](mailto:maxime.letoffe@chartes.psl.eu)"
 )
 
