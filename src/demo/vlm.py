@@ -26,10 +26,18 @@ MODELS_URL = "https://openrouter.ai/api/v1/models"
 #   absent    : valeur à renvoyer quand il n'y a rien à trouver
 #   consignes : phrase injectée dans le prompt, par version de prompt
 #
-# Deux versions de prompt coexistent pour pouvoir les comparer sur le jeu de
-# référence (`cartes_benchmark`). La v2 corrige les erreurs les plus fréquentes
-# observées en v1 : noms communs génériques pris pour des monuments, confusion
-# entre niveaux, et ville de l'imprimeur prise pour la commune représentée.
+# Trois versions de prompt coexistent pour pouvoir les comparer sur le jeu de
+# référence (`cartes_benchmark`). Mise au point sur une moitié des cartes,
+# mesure sur l'autre, jamais inspectée, pour ne pas écrire des consignes qui ne
+# vaudraient que pour ce corpus.
+#   v1 : version d'origine — 61 % de cartes entièrement justes
+#   v2 : par défaut. Corrige les erreurs les plus fréquentes de la v1 (noms
+#        communs pris pour des monuments, confusion entre niveaux, ville de
+#        l'imprimeur prise pour la commune) — 72 %, gain confirmé hors corpus
+#        de mise au point
+#   v3 : tentative contre les légendes inventées. Rend le modèle plus affirmatif
+#        sur la commune mais moins prudent ailleurs — 67 %, donc écartée, et
+#        conservée ici pour ne pas refaire l'essai
 FIELDS = {
     "commune": {
         "label": "Commune",
@@ -48,6 +56,15 @@ FIELDS = {
                 "d'imprimeur ou de photographe (mentions « Édit. », « Phot. », "
                 "« Cliché », « Collection »), ni celle du cachet postal."
             ),
+            "v3": (
+                "commune : la commune française représentée. C'est presque toujours "
+                "le nom en gros dans la légende, souvent suivi du département entre "
+                "parenthèses. Ne prends jamais la ville qui suit un nom d'éditeur, "
+                "d'imprimeur ou de photographe (mentions « Édit. », « Phot. », "
+                "« Cliché », « Collection »), ni celle du cachet postal. Si aucune "
+                "légende n'est lisible, tu peux conclure à partir d'un monument que "
+                "tu reconnais avec certitude ; dans le doute, réponds par l'absence."
+            ),
         },
     },
     "lieu_dit": {
@@ -60,6 +77,14 @@ FIELDS = {
                 "du type « la vallée » ou « la place »."
             ),
             "v2": (
+                "lieu_dit : le secteur de la commune, entre la commune et le monument "
+                "(lieu-dit, hameau, quartier, rue, avenue, place). Tournures typiques de "
+                "la légende : « Vue des Beaumes », « Quartier Saint-Jean », « Route de X ». "
+                "N'est PAS un lieu-dit : un monument ou un jardin portant un nom, un cours "
+                "d'eau, une formule générale (« la vallée », « la place »), ni le point de "
+                "vue d'où la photo est prise."
+            ),
+            "v3": (
                 "lieu_dit : le secteur de la commune, entre la commune et le monument "
                 "(lieu-dit, hameau, quartier, rue, avenue, place). Tournures typiques de "
                 "la légende : « Vue des Beaumes », « Quartier Saint-Jean », « Route de X ». "
@@ -86,6 +111,15 @@ FIELDS = {
                 "pour une vue générale ou panoramique, réponds « Aucun monument ». Si la "
                 "légende en nomme plusieurs, les citer séparés par « et »."
             ),
+            "v3": (
+                "monument : l'édifice ou le site qui est le SUJET de la vue, et seulement "
+                "s'il porte un nom propre : « église Saint-Pierre », « pont Saint-Bénézet », "
+                "« château de Picolette », « mont Ventoux ». Un nom commun seul (« église », "
+                "« pont », « fontaine », « château ») n'est pas une réponse : dans ce cas, et "
+                "pour une vue générale ou panoramique, réponds « Aucun monument ». Si la "
+                "légende en nomme plusieurs, les citer séparés par « et ». Une œuvre "
+                "photographiée dans un musée relève du musée qui la conserve."
+            ),
         },
     },
     "texte_imprime": {
@@ -100,6 +134,13 @@ FIELDS = {
                 "texte_imprime : transcription fidèle de tout le texte imprimé lisible sur la "
                 "carte, légende comprise, en respectant l'orthographe d'origine."
             ),
+            "v3": (
+                "texte_imprime : transcription STRICTEMENT fidèle du texte réellement "
+                "imprimé sur la carte, en respectant l'orthographe d'origine. Beaucoup de "
+                "cartes ne portent aucune légende, ou seulement une signature d'éditeur : "
+                "dans ce cas, transcris uniquement ce qui est là et n'invente jamais une "
+                "légende plausible."
+            ),
         },
     },
     "date_editeur": {
@@ -111,6 +152,10 @@ FIELDS = {
                 "lisibles sur la carte, sans rien deviner."
             ),
             "v2": (
+                "date_editeur : la date et le nom de l'éditeur ou du photographe s'ils sont "
+                "lisibles sur la carte, sans rien deviner."
+            ),
+            "v3": (
                 "date_editeur : la date et le nom de l'éditeur ou du photographe s'ils sont "
                 "lisibles sur la carte, sans rien deviner."
             ),
@@ -145,7 +190,17 @@ REGLES_V2 = (
     "place la carte au mauvais endroit sur la carte finale, une absence non.\n"
 )
 
-PROMPT_FOOTER = {"v1": REGLES_COMMUNES, "v2": REGLES_COMMUNES + REGLES_V2}
+REGLES_V3 = (
+    "- Ne transcris que le texte réellement présent. Une carte sans légende est "
+    "fréquente : n'en invente jamais une, et ne déduis pas un lieu d'un texte que "
+    "tu n'as pas lu.\n"
+)
+
+PROMPT_FOOTER = {
+    "v1": REGLES_COMMUNES,
+    "v2": REGLES_COMMUNES + REGLES_V2,
+    "v3": REGLES_COMMUNES + REGLES_V2 + REGLES_V3,
+}
 
 
 def build_prompt(fields, contexte=None, variante=VARIANTE_PAR_DEFAUT):
