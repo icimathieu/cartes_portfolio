@@ -22,17 +22,36 @@ jobs:
           from huggingface_hub import HfApi
 
           api = HfApi()
+          jeton = os.environ["HF_TOKEN"]
+          espace = "icimathieu/cartes_portfolio"
+
           api.upload_folder(
               folder_path=".",
-              repo_id="icimathieu/cartes_portfolio",
+              repo_id=espace,
               repo_type="space",
-              token=os.environ["HF_TOKEN"],
+              token=jeton,
               ignore_patterns=[
                   ".git/*",
                   ".github/*",
                   ".claude/*",
                   ".gitignore",
+                  ".gitattributes",
+                  "deploy/*",
               ],
+          )
+
+          # Le Space a son propre .gitattributes : il doit déclarer les images
+          # comme fichiers LFS, sinon le conteneur Docker reçoit un pointeur
+          # texte à la place du JPEG et la galerie s'affiche vide. Le fichier de
+          # GitHub, lui, reste sans ces lignes : sinon il faudrait git-lfs en
+          # local pour committer la moindre image.
+          api.upload_file(
+              path_or_fileobj="deploy/gitattributes_space",
+              path_in_repo=".gitattributes",
+              repo_id=espace,
+              repo_type="space",
+              token=jeton,
+              commit_message="Déclare les images en LFS côté Space",
           )
           print("Upload terminé.")
           EOF
