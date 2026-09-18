@@ -270,6 +270,17 @@ def test_json_irreparable(monkeypatch):
         vlm.analyser_carte(b"jpeg", ["commune"], "modele", "cle")
 
 
+def test_commune_imposee_dans_le_schema():
+    """La liste fermée est une contrainte de décodage, pas une consigne."""
+    schema = vlm.build_schema(["commune", "monument"], ["Avignon", "Apt", "avignon"])
+    commune = schema["json_schema"]["schema"]["properties"]["commune"]
+    assert commune["enum"] == ["Avignon", "Apt", "Aucune commune"]
+    assert "enum" not in schema["json_schema"]["schema"]["properties"]["monument"]
+    # Sans liste, le modèle répond librement.
+    assert "enum" not in vlm.build_schema(["commune"])["json_schema"]["schema"][
+        "properties"]["commune"]
+
+
 # --- Référentiel des communes -----------------------------------------------
 
 from demo import lieux  # noqa: E402
@@ -336,10 +347,69 @@ def test_coordonnees_seulement_si_sans_ambiguite():
 
 
 def test_departement_leve_les_homonymes():
-    """« Pernes » existe dans le Pas-de-Calais ; sur une carte du Vaucluse, non."""
-    assert lieux.coordonnees("Pernes") is not None
-    assert lieux.coordonnees("Pernes", "Vaucluse") is None
+    """« Pernes » est dans le Pas-de-Calais ; en Vaucluse, c'est Pernes-les-Fontaines."""
+    assert lieux.coordonnees("Pernes")["lat"] == pytest.approx(50.5, abs=0.3)
+    assert lieux.coordonnees("Pernes", "Vaucluse")["lat"] == pytest.approx(43.99, abs=0.1)
     assert lieux.code_departement("Vaucluse") == "84"
+
+
+def test_nom_abrege_complete_dans_le_departement():
+    """Restreint à un département, un nom tronqué redevient identifiable."""
+    assert lieux.resoudre("Pernes", "Vaucluse")["nom"] == "Pernes-les-Fontaines"
+    assert lieux.resoudre("Pernes")["nom"] == "Pernes"  # unique en France sous ce nom
+    corrige, notes = lieux.corriger({"commune": "Pernes"}, ABSENTS, "Vaucluse")
+    assert corrige["commune"] == "Pernes-les-Fontaines"
+    assert notes
+
+
+def test_noms_d_epoque_traduits():
+    """Une carte ancienne imprime le nom d'avant le renommage de la commune."""
+    traductions = {
+        "Vaison": "Vaison-la-Romaine",        # renommée en 1924
+        "Pernes": "Pernes-les-Fontaines",
+        "Beaumes": "Beaumes-de-Venise",
+        "Saumanes": "Saumane-de-Vaucluse",    # graphie ancienne flottante
+        "Mérindol-le-Vieux": "Mérindol",      # le village d'avant 1545
+        "St-Pantaléon": "Saint-Pantaléon",    # abréviation de légende
+        "Thor (Le)": "Le Thor",               # article inversé des catalogues
+    }
+    for lu, actuel in traductions.items():
+        assert lieux.resoudre(lu, "Vaucluse")["nom"] == actuel, lu
+
+
+def test_aucune_traduction_abusive():
+    """La tolérance ne doit jamais happer une commune qui existe ailleurs."""
+    for nom in ("Nîmes", "Arles", "Marseille", "Carcassonne", "Sault-de-Navailles",
+                "Vaucluse", "Mont Ventoux", "Sauvans"):
+        assert lieux.resoudre(nom, "Vaucluse") is None, nom
+
+
+def test_lieu_sans_commune_place_dans_le_departement(monkeypatch):
+    """Les cartes du mont Ventoux ne relèvent d'aucune commune."""
+    monkeypatch.setattr(geocode, "interroger_nominatim",
+                        lambda requete, **k: {"lat": 44.17, "lon": 5.28, "adresse": requete})
+    resultat = geocode.geocoder_cascade("Aucune commune", "Mont Ventoux", "L'Observatoire",
+                                        departement="Vaucluse")
+    assert resultat["niveau"] == "monument"
+    assert resultat["requete"] == "L'Observatoire, Vaucluse, France"
+
+
+def test_commune_hors_du_departement_declare():
+    """Un fonds départemental contient aussi des cartes d'ailleurs."""
+    corrige, notes = lieux.corriger(
+        {"commune": "Nîmes", "departement": "Aucun département"}, ABSENTS, "Vaucluse")
+    assert corrige["commune"] == "Nîmes" and corrige["departement"] == "Gard"
+    assert notes and "Gard" in notes[0]
+
+
+def test_commune_du_departement_recuperee_dans_le_monument():
+    """Le département déclaré permet de voir qu'un nom de commune est mal placé."""
+    corrige, notes = lieux.corriger(
+        {"commune": "Aucune commune", "lieu_dit": "Aucun lieu-dit",
+         "monument": "L'Isle-sur-la-Sorgue"},
+        ABSENTS, "Vaucluse")
+    assert corrige["commune"] == "L'Isle-sur-la-Sorgue"
+    assert corrige["monument"] == "Aucun monument"
 
 
 def test_departement_invente_ignore():
@@ -390,11 +460,12 @@ def test_departement_declare_complete_celui_de_la_carte():
     assert corrige["departement"] == "Vaucluse"
 
 
-def test_le_departement_imprime_reste_prioritaire():
-    """Un fonds départemental contient aussi des cartes d'ailleurs."""
+def test_le_departement_declare_prime_sur_celui_lu_par_le_modele():
+    """Le modèle lit parfois de travers ; l'archiviste, lui, connaît son fonds."""
     corrige, _ = lieux.corriger(
-        {"commune": "Nîmes", "departement": "Gard"}, ABSENTS, "Vaucluse")
-    assert corrige["departement"] == "Gard"
+        {"commune": "Pernes", "departement": "Pas-de-Calais"}, ABSENTS, "Vaucluse")
+    assert corrige["departement"] == "Vaucluse"
+    assert corrige["commune"] == "Pernes-les-Fontaines"
 
 
 def test_liste_des_departements_proposee():

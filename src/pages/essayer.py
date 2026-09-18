@@ -15,22 +15,11 @@ MAX_IMAGES_PAR_ESSAI = 5
 st.title("🔧 Essayer la pipeline")
 
 st.markdown(
-    "Téléversez vos cartes postales : le modèle lit l'image, propose "
-    "une commune, un lieu-dit et un monument, puis ces noms sont convertis en "
-    "coordonnées par OpenStreetMap et placés sur une carte."
-)
-
-st.info(
-    "**Démo simplifiée : elle ne voit que l'image**, et rien d'autre. Notre chaîne de "
-    "traitement complète y ajoute les métadonnées de votre catalogue, une recherche "
-    "automatisée sur les bases patrimoniales (Mérimée, POP, Wikidata) et sur le web pour "
-    "les édifices, un géocodage en cascade qui croise ces sources, puis une vérification. "
-    "Mesuré sur notre benchmark, l'écart porte surtout sur **la précision du point posé "
-    "sur la carte** : la chaîne complète **multiplie par plus de deux** le nombre de "
-    "cartes situées sur le bâtiment exact, et ne laisse **aucune carte sans position**, "
-    "là où la démo en abandonne une sur quatorze. Les chiffres détaillés sont sur la "
-    "page Benchmark.",
-    icon="ℹ️",
+    "Téléversez vos cartes postales et indiquez le département de votre service "
+    "d'archives : le modèle lit l'image et propose une commune, un lieu-dit et un "
+    "monument. Ces noms sont vérifiés contre les communes du département que vous "
+    "avez choisi, puis convertis en coordonnées par OpenStreetMap et placés sur une "
+    "carte."
 )
 
 # --- Budget du jour et quota du visiteur ------------------------------------
@@ -45,35 +34,54 @@ if "libelle_code" not in st.session_state:
 if "code_signale" not in st.session_state:
     st.session_state.code_signale = False
 
-with st.expander("J'ai un code d'accès", expanded=False):
-    st.caption(
-        "Les codes figurent dans nos courriers aux services d'archives et donnent "
-        f"droit à {quota.IMAGES_AVEC_CODE} images. Sans code, la démo fonctionne "
-        f"quand même, dans la limite de {quota.IMAGES_ANONYME} images."
-    )
-    saisie = st.text_input("Code", max_chars=32, placeholder="XXXX-000")
-    if st.button("Valider le code"):
-        libelle = quota.verifier_code(saisie)
-        if libelle:
-            st.session_state.libelle_code = libelle
-            st.success("Code reconnu, quota étendu.")
-        else:
-            st.error("Code inconnu.")
-
 quota_total = quota.quota_images(st.session_state.libelle_code)
 restantes = max(quota_total - st.session_state.images_utilisees, 0)
 
 ouverte, message_budget, _ = quota.etat_budget(api_key, depense)
 if not ouverte:
-    st.warning(message_budget, icon="⏳")
+    st.warning(message_budget, icon="\u23f3")
 elif not api_key:
     st.warning(
-        "La démo est momentanément indisponible. Écrivez-nous et nous vous "
+        "La d\u00e9mo est momentan\u00e9ment indisponible. \u00c9crivez-nous et nous vous "
         "montrons la pipeline sur vos propres cartes.",
-        icon="⏳",
+        icon="\u23f3",
     )
 
-st.caption(f"Il vous reste **{restantes}** images sur {quota_total} pour cette visite.")
+col_quota, col_ecart = st.columns([3, 2])
+
+with col_quota:
+    st.caption(f"Il vous reste **{restantes}** images sur {quota_total} pour cette visite.")
+    with st.expander("J\u2019ai un code d\u2019acc\u00e8s", expanded=False):
+        st.caption(
+            "Les codes figurent dans nos courriers aux services d\u2019archives et donnent "
+            f"droit \u00e0 {quota.IMAGES_AVEC_CODE} images. Sans code, la d\u00e9mo fonctionne "
+            f"quand m\u00eame, dans la limite de {quota.IMAGES_ANONYME} images."
+        )
+        saisie = st.text_input("Code", max_chars=32, placeholder="XXXX-000")
+        if st.button("Valider le code"):
+            libelle = quota.verifier_code(saisie)
+            if libelle:
+                st.session_state.libelle_code = libelle
+                st.success("Code reconnu, quota \u00e9tendu.")
+            else:
+                st.error("Code inconnu.")
+
+with col_ecart:
+    with st.expander("En quoi cette d\u00e9mo est simplifi\u00e9e", expanded=False):
+        st.markdown(
+            "**Elle ne voit que l\u2019image et le d\u00e9partement que vous indiquez.** Notre "
+            "cha\u00eene de traitement compl\u00e8te y ajoute les m\u00e9tadonn\u00e9es de votre catalogue, "
+            "un g\u00e9ocodage en cascade qui croise ces sources et une v\u00e9rification. Mesur\u00e9 "
+            "sur notre benchmark, l\u2019\u00e9cart porte surtout sur **la pr\u00e9cision du point pos\u00e9 "
+            "sur la carte** : la cha\u00eene compl\u00e8te situe **trois fois plus** de cartes sur "
+            "le b\u00e2timent exact, **divise par deux** le nombre de celles qui n\u2019arrivent "
+            "pas plus loin que la commune, et **par pr\u00e8s de trois** le nombre de cartes "
+            "mal plac\u00e9es. Les chiffres sont sur la page Benchmark.\n\n"
+            "\U0001f6a7 En cours de d\u00e9veloppement, donc absent de la cha\u00eene mesur\u00e9e : une "
+            "recherche automatis\u00e9e sur le web et sur les bases patrimoniales "
+            "(M\u00e9rim\u00e9e, POP, Wikidata) pour identifier les \u00e9difices que le catalogue "
+            "ne nomme pas."
+        )
 
 # --- Réglages de l'essai ----------------------------------------------------
 
@@ -105,17 +113,23 @@ with col_droite:
         if coche or spec.get("locked"):
             champs.append(cle)
 
-    st.markdown("**De quel service d'archives viennent ces cartes ?**")
+    st.markdown("**De quel service d'archives viennent ces cartes ?** *(obligatoire)*")
     departement_declare = st.selectbox(
         "Département du service d'archives",
         options=lieux.liste_departements(),
         index=None,
         placeholder="Choisissez un département",
         label_visibility="collapsed",
-        help="Sans cette indication, une carte peut atterrir dans le mauvais "
-             "département : « Pernes » existe dans le Pas-de-Calais et en Vaucluse. "
-             "Le département imprimé sur la carte reste prioritaire.",
+        help="Notre chaîne de traitement restreint alors la recherche aux communes "
+             "de ce département. Sans cette indication, une carte peut atterrir à "
+             "900 km : « Pernes » existe dans le Pas-de-Calais et en Vaucluse.",
     )
+    if departement_declare:
+        st.caption(
+            f"La recherche sera restreinte aux "
+            f"**{len(lieux.communes_du_departement(departement_declare))} communes** "
+            "de ce département : n'envoyez que des cartes de ce fonds."
+        )
 
     st.markdown("**Quel modèle ?**")
     choix = st.radio(
@@ -127,8 +141,13 @@ with col_droite:
     )
     st.caption(modeles.MODELES[choix]["detail"])
 
-if fichiers and not departement_declare:
-    st.caption("Indiquez le département de votre service d'archives pour lancer l'analyse.")
+if not departement_declare:
+    st.warning(
+        "**Indiquez d'abord le département de votre service d'archives** "
+        "(ci-dessus, à droite) : le bouton Analyser restera inactif tant que ce "
+        "n'est pas fait.",
+        icon="⬆️",
+    )
 
 lancer = st.button(
     "Analyser",
@@ -156,10 +175,8 @@ def afficher_resultat(fichier, reponse, geo, champs_demandes, corrections=()):
                     st.text(valeur)
             else:
                 st.markdown(f"**{libelle}** — {valeur}")
-        if resultat.get("indices"):
-            st.caption("Indice retenu par le modèle : " + str(resultat["indices"]))
         for correction in corrections:
-            st.caption("Vérifié sur le référentiel des communes : " + correction)
+            st.caption("Vérifié sur le référentiel officiel des communes : " + correction)
 
     if geo["niveau"] == "echec":
         st.warning("Aucun lieu n'a pu être placé sur la carte pour cette image.")
@@ -176,13 +193,8 @@ def afficher_resultat(fichier, reponse, geo, champs_demandes, corrections=()):
         components.html(carte._repr_html_(), height=280)
         st.caption(geocode.ATTRIBUTION)
 
-    details = [f"modèle : {reponse.get('modele')}"]
-    if reponse.get("fournisseur"):
-        details.append(f"fournisseur : {reponse['fournisseur']}")
-    details.append(f"durée : {reponse.get('latence_s')} s")
-    st.caption(" · ".join(details))
-    for rejet in geo["rejets"]:
-        st.caption(f"Écarté : « {rejet['requete']} » — {rejet['raison']}")
+    # Ni le nom du fournisseur, ni les requêtes OpenStreetMap infructueuses :
+    # ce sont des détails d'atelier, sans intérêt pour un archiviste.
 
 
 if lancer and fichiers:
@@ -267,7 +279,8 @@ with st.expander("Ce que deviennent vos images"):
   département que vous indiquez. Rien n'est écrit sur un disque, et recharger la page
   efface tout.
 - Les noms de communes sont vérifiés contre le **référentiel officiel des communes
-  françaises**, embarqué dans l'application : rien n'est envoyé nulle part pour ça.
+  françaises**, embarqué dans l'application et restreint au département que vous
+  indiquez : rien n'est envoyé nulle part pour ça.
 - Les coordonnées viennent de **Nominatim / OpenStreetMap**, interrogé avec les seuls
   noms de lieux détectés, jamais avec votre image.
 - Pour votre fonds, la pipeline peut tourner **entièrement sur nos machines ou sur un

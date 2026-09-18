@@ -164,24 +164,6 @@ FIELDS = {
             ),
         },
     },
-    "date_editeur": {
-        "label": "Date et éditeur, si visibles",
-        "absent": "",
-        "consignes": {
-            "v1": (
-                "date_editeur : la date et le nom de l'éditeur ou du photographe s'ils sont "
-                "lisibles sur la carte, sans rien deviner."
-            ),
-            "v2": (
-                "date_editeur : la date et le nom de l'éditeur ou du photographe s'ils sont "
-                "lisibles sur la carte, sans rien deviner."
-            ),
-            "v3": (
-                "date_editeur : la date et le nom de l'éditeur ou du photographe s'ils sont "
-                "lisibles sur la carte, sans rien deviner."
-            ),
-        },
-    },
 }
 
 DEFAULT_FIELDS = ["commune", "departement", "lieu_dit", "monument", "texte_imprime"]
@@ -254,9 +236,22 @@ def build_prompt(fields, contexte=None, variante=VARIANTE_PAR_DEFAUT):
     return prompt
 
 
-def build_schema(fields):
-    """Schéma JSON strict correspondant aux niveaux demandés."""
+def build_schema(fields, communes=None):
+    """Schéma JSON strict correspondant aux niveaux demandés.
+
+    communes : liste fermée de communes autorisées. Le modèle ne peut alors
+    plus répondre autre chose — c'est une contrainte de décodage, pas une
+    consigne qu'il peut ignorer. La valeur d'absence reste toujours possible,
+    sans quoi une carte non identifiable forcerait une réponse inventée.
+    """
     properties = {key: {"type": "string"} for key in fields}
+    if communes and "commune" in properties:
+        vues, choix = set(), []
+        for nom in list(communes) + [FIELDS["commune"]["absent"]]:
+            if nom and nom.lower() not in vues:
+                vues.add(nom.lower())
+                choix.append(nom)
+        properties["commune"] = {"type": "string", "enum": choix}
     properties["indices"] = {"type": "string"}
     return {
         "type": "json_schema",
@@ -308,6 +303,7 @@ def analyser_carte(
     api_key,
     contexte=None,
     variante=VARIANTE_PAR_DEFAUT,
+    communes=None,
     zdr=True,
     max_tokens=1500,
     timeout=120,
@@ -345,7 +341,7 @@ def analyser_carte(
                 ],
             }
         ],
-        "response_format": build_schema(fields),
+        "response_format": build_schema(fields, communes),
         "max_tokens": max_tokens,
         "provider": provider,
         "usage": {"include": True},

@@ -35,8 +35,8 @@ FILTRE_KM = 20.0
 NIVEAUX = {
     "monument": "monument ou édifice",
     "lieu_dit": "lieu-dit ou quartier",
-    "commune": "commune",
-    "departement": "département",
+    "commune": "commune (point posé au centre du village)",
+    "departement": "département (point posé au centre)",
     "echec": "aucun lieu trouvé",
 }
 
@@ -148,10 +148,14 @@ def geocoder_cascade(commune=None, lieu_dit=None, monument=None, ancre=None,
         ancre = interroger_nominatim(f"{commune_propre}{suffixe}")
 
     for niveau, valeur in (("monument", monument), ("lieu_dit", lieu_dit)):
-        if _absent(valeur) or not commune_propre:
+        if _absent(valeur) or not (commune_propre or dept):
             continue
+        # Sans commune, le département suffit à borner la recherche : une carte
+        # du mont Ventoux ne relève d'aucune commune dans les catalogues, et
+        # mieux vaut la poser sur l'observatoire que sur le département entier.
+        cadre = f", {commune_propre}{suffixe}" if commune_propre else suffixe
         for terme in _candidats(valeur):
-            requete = f"{terme}, {commune_propre}{suffixe}"
+            requete = f"{terme}{cadre}"
             trouve = interroger_nominatim(requete)
             if not trouve:
                 rejets.append({"requete": requete, "raison": "introuvable dans OpenStreetMap"})
