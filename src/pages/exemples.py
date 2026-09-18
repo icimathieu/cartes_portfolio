@@ -43,6 +43,29 @@ filter_option = st.radio(
     horizontal=True,
 )
 
+def afficher_image(chemin):
+    """Affiche une image, sans laisser un fichier abîmé emporter toute la page.
+
+    Le Space a déjà servi un fichier que Pillow ne reconnaissait pas alors que
+    le dépôt, lui, contenait bien un JPEG : la trace est donc écrite dans les
+    journaux du conteneur, avec la taille et les premiers octets réellement
+    lus, seul moyen de savoir ce que voit l'application.
+    """
+    try:
+        st.image(str(chemin), use_container_width=True)
+        return True
+    except Exception as exc:
+        try:
+            debut = chemin.read_bytes()[:48]
+            taille = chemin.stat().st_size
+        except OSError:
+            debut, taille = b"", 0
+        print(f"[exemples] image illisible : {chemin} — {taille} octets — "
+              f"début {debut!r} — {type(exc).__name__}: {exc}", flush=True)
+        st.caption(f"Aperçu indisponible pour {chemin.name}.")
+        return False
+
+
 # --- Galerie ---
 for i in range(0, len(image_files), 2):
     cols = st.columns(2)
@@ -59,7 +82,7 @@ for i in range(0, len(image_files), 2):
             continue
 
         with col:
-            st.image(str(img_path), use_container_width=True)
+            afficher_image(img_path)
 
             commune = meta.get("trans_city", "—")
             lieu_dit = meta.get("trans_hamlet_uniformise", "—")

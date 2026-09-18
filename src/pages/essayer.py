@@ -47,41 +47,22 @@ elif not api_key:
         icon="\u23f3",
     )
 
-col_quota, col_ecart = st.columns([3, 2])
+st.caption(f"Il vous reste **{restantes}** images sur {quota_total} pour cette visite.")
 
-with col_quota:
-    st.caption(f"Il vous reste **{restantes}** images sur {quota_total} pour cette visite.")
-    with st.expander("J\u2019ai un code d\u2019acc\u00e8s", expanded=False):
-        st.caption(
-            "Les codes figurent dans nos courriers aux services d\u2019archives et donnent "
-            f"droit \u00e0 {quota.IMAGES_AVEC_CODE} images. Sans code, la d\u00e9mo fonctionne "
-            f"quand m\u00eame, dans la limite de {quota.IMAGES_ANONYME} images."
-        )
-        saisie = st.text_input("Code", max_chars=32, placeholder="XXXX-000")
-        if st.button("Valider le code"):
-            libelle = quota.verifier_code(saisie)
-            if libelle:
-                st.session_state.libelle_code = libelle
-                st.success("Code reconnu, quota \u00e9tendu.")
-            else:
-                st.error("Code inconnu.")
-
-with col_ecart:
-    with st.expander("En quoi cette d\u00e9mo est simplifi\u00e9e", expanded=False):
-        st.markdown(
-            "**Elle ne voit que l\u2019image et le d\u00e9partement que vous indiquez.** Notre "
-            "cha\u00eene de traitement compl\u00e8te y ajoute les m\u00e9tadonn\u00e9es de votre catalogue, "
-            "un g\u00e9ocodage en cascade qui croise ces sources et une v\u00e9rification. Mesur\u00e9 "
-            "sur notre benchmark, l\u2019\u00e9cart porte surtout sur **la pr\u00e9cision du point pos\u00e9 "
-            "sur la carte** : la cha\u00eene compl\u00e8te situe **trois fois plus** de cartes sur "
-            "le b\u00e2timent exact, **divise par deux** le nombre de celles qui n\u2019arrivent "
-            "pas plus loin que la commune, et **par pr\u00e8s de trois** le nombre de cartes "
-            "mal plac\u00e9es. Les chiffres sont sur la page Benchmark.\n\n"
-            "\U0001f6a7 En cours de d\u00e9veloppement, donc absent de la cha\u00eene mesur\u00e9e : une "
-            "recherche automatis\u00e9e sur le web et sur les bases patrimoniales "
-            "(M\u00e9rim\u00e9e, POP, Wikidata) pour identifier les \u00e9difices que le catalogue "
-            "ne nomme pas."
-        )
+with st.expander("J\u2019ai un code d\u2019acc\u00e8s", expanded=False):
+    st.caption(
+        "Les codes figurent dans nos courriers aux services d\u2019archives et donnent "
+        f"droit \u00e0 {quota.IMAGES_AVEC_CODE} images. Sans code, la d\u00e9mo fonctionne "
+        f"quand m\u00eame, dans la limite de {quota.IMAGES_ANONYME} images."
+    )
+    saisie = st.text_input("Code", max_chars=32, placeholder="XXXX-000")
+    if st.button("Valider le code"):
+        libelle = quota.verifier_code(saisie)
+        if libelle:
+            st.session_state.libelle_code = libelle
+            st.success("Code reconnu, quota \u00e9tendu.")
+        else:
+            st.error("Code inconnu.")
 
 # --- Réglages de l'essai ----------------------------------------------------
 
@@ -94,6 +75,21 @@ with col_gauche:
         accept_multiple_files=True,
         help=f"{MAX_IMAGES_PAR_ESSAI} images au maximum par essai.",
         disabled=not (ouverte and api_key and restantes),
+    )
+
+    st.info(
+        "**Cette d\u00e9mo ne voit que l\u2019image et le d\u00e9partement que vous indiquez.** "
+        "Notre cha\u00eene de traitement compl\u00e8te y ajoute les m\u00e9tadonn\u00e9es de votre "
+        "catalogue, un g\u00e9ocodage en cascade qui croise ces sources et une "
+        "v\u00e9rification. Mesur\u00e9 sur notre benchmark, l\u2019\u00e9cart porte surtout sur **la "
+        "pr\u00e9cision du point pos\u00e9 sur la carte** : la cha\u00eene compl\u00e8te situe **trois "
+        "fois plus** de cartes sur le b\u00e2timent exact, **divise par deux** le nombre de "
+        "celles qui n\u2019arrivent pas plus loin que la commune, et **par pr\u00e8s de trois** "
+        "le nombre de cartes mal plac\u00e9es. Les chiffres sont sur la page Benchmark.\n\n"
+        "\U0001f6a7 En cours de d\u00e9veloppement, donc absent de la cha\u00eene mesur\u00e9e : une "
+        "recherche automatis\u00e9e sur le web et sur les bases patrimoniales (M\u00e9rim\u00e9e, "
+        "POP, Wikidata) pour identifier les \u00e9difices que le catalogue ne nomme pas.",
+        icon="\u2139\ufe0f",
     )
 
 with col_droite:
@@ -141,19 +137,21 @@ with col_droite:
     )
     st.caption(modeles.MODELES[choix]["detail"])
 
-if not departement_declare:
-    st.warning(
-        "**Indiquez d'abord le département de votre service d'archives** "
-        "(ci-dessus, à droite) : le bouton Analyser restera inactif tant que ce "
-        "n'est pas fait.",
-        icon="⬆️",
+col_bouton, col_rappel = st.columns([1, 4])
+
+with col_bouton:
+    lancer = st.button(
+        "Analyser",
+        type="primary",
+        disabled=not (fichiers and departement_declare and ouverte and api_key),
     )
 
-lancer = st.button(
-    "Analyser",
-    type="primary",
-    disabled=not (fichiers and departement_declare and ouverte and api_key),
-)
+with col_rappel:
+    if not departement_declare:
+        st.caption(
+            ":orange[Indiquez le service d\u2019archives d\u2019o\u00f9 viennent ces cartes pour "
+            "activer l\u2019analyse.]"
+        )
 
 # --- Analyse ----------------------------------------------------------------
 
