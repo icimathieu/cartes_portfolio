@@ -10,12 +10,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from demo import geocode, images, modeles, quota, vlm  # noqa: E402
 from footer import render_footer  # noqa: E402
 
-MAX_IMAGES_PAR_ESSAI = 3
+MAX_IMAGES_PAR_ESSAI = 5
 
 st.title("🔧 Essayer la pipeline")
 
 st.markdown(
-    "Téléversez une à trois de vos cartes postales : le modèle lit l'image, propose "
+    "Téléversez vos cartes postales : le modèle lit l'image, propose "
     "une commune, un lieu-dit et un monument, puis ces noms sont convertis en "
     "coordonnées par OpenStreetMap et placés sur une carte."
 )
@@ -107,11 +107,6 @@ with col_droite:
         label_visibility="collapsed",
     )
     st.caption(modeles.MODELES[choix]["detail"])
-    prix_mille = modeles.MODELES[choix]["prix_usd_par_image"] * 1000
-    st.caption(
-        f"Ordre de grandeur : **{prix_mille:.2f} $ pour 1 000 cartes** avec ce modèle. "
-        "Le coût réel de chaque essai est affiché sous les résultats."
-    )
 
 lancer = st.button("Analyser", type="primary", disabled=not (fichiers and ouverte and api_key))
 
@@ -156,8 +151,6 @@ def afficher_resultat(fichier, reponse, geo, champs_demandes):
     details = [f"modèle : {reponse.get('modele')}"]
     if reponse.get("fournisseur"):
         details.append(f"fournisseur : {reponse['fournisseur']}")
-    if reponse.get("cout_usd") is not None:
-        details.append(f"coût réel de cet essai : {reponse['cout_usd']:.4f} $")
     details.append(f"durée : {reponse.get('latence_s')} s")
     st.caption(" · ".join(details))
     for rejet in geo["rejets"]:
@@ -233,10 +226,10 @@ with st.expander("Ce que deviennent vos images"):
 - **Nous ne gardons rien** : ni image, ni résultat, ni adresse, ni compte. Rien n'est
   écrit sur un disque, et recharger la page efface tout.
 - Les coordonnées viennent de **Nominatim / OpenStreetMap**, interrogé avec les seuls
-  noms de lieux, jamais avec votre image.
-- Pour un fonds sensible, la pipeline peut tourner **entièrement sur nos machines ou
-  sur un serveur français ou européen**, avec un modèle à poids ouverts : dans ce cas
-  aucune donnée ne sort de l'infrastructure choisie.
+  noms de lieux détectés, jamais avec votre image.
+- Pour votre fonds, la pipeline peut tourner **entièrement sur nos machines ou sur un
+  serveur français**, avec un modèle à poids ouverts : dans ce cas aucune donnée ne
+  sort de l'infrastructure choisie.
         """
     )
 
