@@ -7,7 +7,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from demo import geocode, images, modeles, quota, vlm  # noqa: E402
+from demo import geocode, images, lieux, modeles, quota, vlm  # noqa: E402
 from footer import render_footer  # noqa: E402
 
 MAX_IMAGES_PAR_ESSAI = 5
@@ -21,10 +21,15 @@ st.markdown(
 )
 
 st.info(
-    "**Démo simplifiée.** Elle travaille sur la seule image. La prestation complète "
-    "croise en plus les métadonnées de votre catalogue, une cascade de géocodage à "
-    "plusieurs niveaux et une relecture humaine — ce qui change nettement les "
-    "résultats : voir la page Benchmark.",
+    "**Démo simplifiée : elle ne voit que l'image**, et rien d'autre. Notre chaîne de "
+    "traitement complète y ajoute les métadonnées de votre catalogue, une recherche "
+    "automatisée sur les bases patrimoniales (Mérimée, POP, Wikidata) et sur le web pour "
+    "les édifices, un géocodage en cascade qui croise ces sources, puis une vérification. "
+    "Mesuré sur notre benchmark, l'écart porte surtout sur **la précision du point posé "
+    "sur la carte** : la chaîne complète **multiplie par plus de deux** le nombre de "
+    "cartes situées sur le bâtiment exact, et ne laisse **aucune carte sans position**, "
+    "là où la démo en abandonne une sur quatorze. Les chiffres détaillés sont sur la "
+    "page Benchmark.",
     icon="ℹ️",
 )
 
@@ -85,8 +90,10 @@ with col_gauche:
 
 with col_droite:
     st.markdown("**Que chercher ?**")
-    champs = []
+    champs = list(vlm.CHAMPS_CACHES)
     for cle, spec in vlm.FIELDS.items():
+        if spec.get("cache"):
+            continue
         coche = st.checkbox(
             spec["label"],
             value=cle in vlm.DEFAULT_FIELDS,
@@ -98,6 +105,18 @@ with col_droite:
         if coche or spec.get("locked"):
             champs.append(cle)
 
+    st.markdown("**De quel service d'archives viennent ces cartes ?**")
+    departement_declare = st.selectbox(
+        "Département du service d'archives",
+        options=lieux.liste_departements(),
+        index=None,
+        placeholder="Choisissez un département",
+        label_visibility="collapsed",
+        help="Sans cette indication, une carte peut atterrir dans le mauvais "
+             "département : « Pernes » existe dans le Pas-de-Calais et en Vaucluse. "
+             "Le département imprimé sur la carte reste prioritaire.",
+    )
+
     st.markdown("**Quel modèle ?**")
     choix = st.radio(
         "Modèle",
@@ -108,12 +127,19 @@ with col_droite:
     )
     st.caption(modeles.MODELES[choix]["detail"])
 
-lancer = st.button("Analyser", type="primary", disabled=not (fichiers and ouverte and api_key))
+if fichiers and not departement_declare:
+    st.caption("Indiquez le département de votre service d'archives pour lancer l'analyse.")
+
+lancer = st.button(
+    "Analyser",
+    type="primary",
+    disabled=not (fichiers and departement_declare and ouverte and api_key),
+)
 
 # --- Analyse ----------------------------------------------------------------
 
 
-def afficher_resultat(fichier, reponse, geo, champs_demandes):
+def afficher_resultat(fichier, reponse, geo, champs_demandes, corrections=()):
     """Affiche une carte analysée : image, noms trouvés, carte, coût."""
     colonne_image, colonne_texte = st.columns([1, 2])
     with colonne_image:
@@ -132,6 +158,8 @@ def afficher_resultat(fichier, reponse, geo, champs_demandes):
                 st.markdown(f"**{libelle}** — {valeur}")
         if resultat.get("indices"):
             st.caption("Indice retenu par le modèle : " + str(resultat["indices"]))
+        for correction in corrections:
+            st.caption("Vérifié sur le référentiel des communes : " + correction)
 
     if geo["niveau"] == "echec":
         st.warning("Aucun lieu n'a pu être placé sur la carte pour cette image.")
@@ -196,14 +224,26 @@ if lancer and fichiers:
 
                 st.session_state.images_utilisees += 1
                 depense.ajouter(reponse.get("cout_usd"))
-                resultat = reponse["resultat"] or {}
+
+                # Le modèle confond parfois les niveaux (un département donné
+                # pour une commune) : le référentiel officiel des communes
+                # remet les noms à leur place avant le géocodage.
+                resultat, corrections = lieux.corriger(
+                    reponse["resultat"] or {},
+                    {cle: spec["absent"] for cle, spec in vlm.FIELDS.items()},
+                    departement_declare,
+                )
+                reponse["resultat"] = resultat
+                departement = resultat.get("departement")
                 geo = geocode.geocoder_cascade(
                     commune=resultat.get("commune"),
                     lieu_dit=resultat.get("lieu_dit"),
                     monument=resultat.get("monument"),
+                    departement=departement,
+                    ancre=lieux.coordonnees(resultat.get("commune"), departement),
                 )
 
-            afficher_resultat(fichier, reponse, geo, champs)
+            afficher_resultat(fichier, reponse, geo, champs, corrections)
 
         st.divider()
         st.caption(
@@ -223,8 +263,11 @@ with st.expander("Ce que deviennent vos images"):
 - Elle est transmise à un modèle via **OpenRouter**, qui ne conserve ni les requêtes
   ni les réponses. Chaque appel **impose des fournisseurs qui s'engagent à ne rien
   conserver** et exclut ceux qui collectent les données pour entraîner leurs modèles.
-- **Nous ne gardons rien** : ni image, ni résultat, ni adresse, ni compte. Rien n'est
-  écrit sur un disque, et recharger la page efface tout.
+- **Nous ne gardons rien** : ni image, ni résultat, ni adresse, ni compte, ni le
+  département que vous indiquez. Rien n'est écrit sur un disque, et recharger la page
+  efface tout.
+- Les noms de communes sont vérifiés contre le **référentiel officiel des communes
+  françaises**, embarqué dans l'application : rien n'est envoyé nulle part pour ça.
 - Les coordonnées viennent de **Nominatim / OpenStreetMap**, interrogé avec les seuls
   noms de lieux détectés, jamais avec votre image.
 - Pour votre fonds, la pipeline peut tourner **entièrement sur nos machines ou sur un

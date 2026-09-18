@@ -268,3 +268,136 @@ def test_json_irreparable(monkeypatch):
     monkeypatch.setattr(vlm.requests, "post", lambda *a, **k: FausseReponse(corps))
     with pytest.raises(vlm.VLMError):
         vlm.analyser_carte(b"jpeg", ["commune"], "modele", "cle")
+
+
+# --- Référentiel des communes -----------------------------------------------
+
+from demo import lieux  # noqa: E402
+
+ABSENTS = {cle: spec["absent"] for cle, spec in vlm.FIELDS.items()}
+
+
+def test_departement_pris_pour_une_commune():
+    """Cas réel : « FONTAINE DE VAUCLUSE — La Place » lue comme commune Vaucluse."""
+    corrige, notes = lieux.corriger(
+        {"commune": "Vaucluse", "lieu_dit": "La Place", "monument": "Fontaine de Vaucluse"},
+        ABSENTS,
+    )
+    assert corrige["commune"] == "Fontaine-de-Vaucluse"
+    assert corrige["monument"] == "Aucun monument"
+    assert corrige["lieu_dit"] == "La Place"
+    assert notes and "département" in notes[0]
+
+
+def test_commune_absente_recuperee_ailleurs():
+    corrige, notes = lieux.corriger(
+        {"commune": "Aucune commune", "lieu_dit": "Aucun lieu-dit", "monument": "Le Thor"},
+        ABSENTS,
+    )
+    assert corrige["commune"] == "Le Thor"
+    assert notes
+
+
+def test_nom_de_commune_repete_en_monument():
+    corrige, _ = lieux.corriger(
+        {"commune": "Fontaine-de-Vaucluse", "lieu_dit": "Aucun lieu-dit",
+         "monument": "Fontaine de Vaucluse"},
+        ABSENTS,
+    )
+    assert corrige["monument"] == "Aucun monument"
+
+
+def test_resultat_correct_non_modifie():
+    """Le cas nominal ne doit jamais être touché."""
+    entree = {"commune": "Avignon", "lieu_dit": "Aucun lieu-dit",
+              "monument": "Palais des Papes"}
+    corrige, notes = lieux.corriger(dict(entree), ABSENTS)
+    assert corrige == entree and notes == []
+
+
+def test_pas_de_correction_sur_un_nom_isole():
+    """« Vaucluse » est aussi une commune du Doubs : sans contradiction, on n'y touche pas."""
+    corrige, notes = lieux.corriger(
+        {"commune": "Vaucluse", "lieu_dit": "Aucun lieu-dit", "monument": "Aucun monument"},
+        ABSENTS,
+    )
+    assert corrige["commune"] == "Vaucluse" and notes == []
+
+
+def test_orthographe_officielle():
+    corrige, _ = lieux.corriger({"commune": "AVIGNON"}, ABSENTS)
+    assert corrige["commune"] == "Avignon"
+
+
+def test_coordonnees_seulement_si_sans_ambiguite():
+    assert lieux.coordonnees("fontaine de vaucluse")["lat"] == pytest.approx(43.92, abs=0.05)
+    assert lieux.coordonnees("Sainte-Colombe") is None  # plusieurs communes homonymes
+    assert lieux.coordonnees("Commune Qui N'Existe Pas") is None
+
+
+def test_departement_leve_les_homonymes():
+    """« Pernes » existe dans le Pas-de-Calais ; sur une carte du Vaucluse, non."""
+    assert lieux.coordonnees("Pernes") is not None
+    assert lieux.coordonnees("Pernes", "Vaucluse") is None
+    assert lieux.code_departement("Vaucluse") == "84"
+
+
+def test_departement_invente_ignore():
+    """Vu en vrai : « Pays d'Avignon (Vaucluse) », qui faisait échouer tout le géocodage."""
+    corrige, notes = lieux.corriger(
+        {"commune": "Avignon", "departement": "Pays d'Avignon (Vaucluse)"}, ABSENTS)
+    assert corrige["departement"] == "Aucun département"
+    assert corrige["commune"] == "Avignon"
+    assert notes and "pas un département" in notes[0]
+
+
+def test_commune_homonyme_du_departement_conservee():
+    """Sans contradiction, on ne touche pas : « Vaucluse » est une commune du Doubs."""
+    corrige, notes = lieux.corriger(
+        {"commune": "Vaucluse", "departement": "Vaucluse",
+         "lieu_dit": "Aucun lieu-dit", "monument": "Aucun monument"},
+        ABSENTS,
+    )
+    assert corrige["commune"] == "Vaucluse"
+
+
+def test_cascade_se_replie_sur_le_departement(monkeypatch):
+    reponses = {"vaucluse, france": {"lat": 44.0, "lon": 5.2, "adresse": "Vaucluse"}}
+    monkeypatch.setattr(geocode, "interroger_nominatim",
+                        lambda requete, **k: reponses.get(requete.lower()))
+    resultat = geocode.geocoder_cascade("Aucune commune", "Aucun lieu-dit",
+                                        "Aucun monument", departement="Vaucluse")
+    assert resultat["niveau"] == "departement"
+
+
+def test_departement_present_dans_les_requetes(monkeypatch):
+    vues = []
+
+    def faux(requete, **k):
+        vues.append(requete)
+        return {"lat": 43.9, "lon": 4.8, "adresse": requete}
+
+    monkeypatch.setattr(geocode, "interroger_nominatim", faux)
+    geocode.geocoder_cascade("Pernes", "Aucun lieu-dit", "Porte Saint-Gilles",
+                             departement="Vaucluse")
+    assert all("Vaucluse" in v for v in vues)
+
+
+def test_departement_declare_complete_celui_de_la_carte():
+    """Le service d'archives connaît son fonds : on s'en sert quand la carte se tait."""
+    corrige, _ = lieux.corriger(
+        {"commune": "Pernes", "departement": "Aucun département"}, ABSENTS, "Vaucluse")
+    assert corrige["departement"] == "Vaucluse"
+
+
+def test_le_departement_imprime_reste_prioritaire():
+    """Un fonds départemental contient aussi des cartes d'ailleurs."""
+    corrige, _ = lieux.corriger(
+        {"commune": "Nîmes", "departement": "Gard"}, ABSENTS, "Vaucluse")
+    assert corrige["departement"] == "Gard"
+
+
+def test_liste_des_departements_proposee():
+    noms = lieux.liste_departements()
+    assert "Vaucluse" in noms and "Gard" in noms
+    assert all(nom.strip() for nom in noms)

@@ -67,6 +67,27 @@ FIELDS = {
             ),
         },
     },
+    "departement": {
+        "label": "Département",
+        "cache": True,
+        "absent": "Aucun département",
+        "consignes": {
+            "v1": (
+                "departement : le département imprimé sur la carte, souvent entre "
+                "parenthèses après le nom de la commune."
+            ),
+            "v2": (
+                "departement : le département imprimé sur la carte, souvent entre "
+                "parenthèses après le nom de la commune (« APT (Vaucluse) »). Ne le "
+                "devine pas : s'il n'est pas écrit, réponds par l'absence."
+            ),
+            "v3": (
+                "departement : le département imprimé sur la carte, souvent entre "
+                "parenthèses après le nom de la commune (« APT (Vaucluse) »). Ne le "
+                "devine pas : s'il n'est pas écrit, réponds par l'absence."
+            ),
+        },
+    },
     "lieu_dit": {
         "label": "Lieu-dit, quartier, rue ou place",
         "absent": "Aucun lieu-dit",
@@ -163,7 +184,10 @@ FIELDS = {
     },
 }
 
-DEFAULT_FIELDS = ["commune", "lieu_dit", "monument", "texte_imprime"]
+DEFAULT_FIELDS = ["commune", "departement", "lieu_dit", "monument", "texte_imprime"]
+# Champs demandés au modèle quoi qu'il arrive : le département sert à
+# distinguer les communes homonymes, il n'est pas proposé au visiteur.
+CHAMPS_CACHES = [cle for cle, spec in FIELDS.items() if spec.get("cache")]
 VARIANTE_PAR_DEFAUT = "v2"
 
 PROMPT_HEADER = (
@@ -355,6 +379,11 @@ def analyser_carte(
             raise VLMError(f"Appel au modèle impossible : {exc}")
 
     resp = _envoyer(payload)
+    if resp.status_code == 429:
+        # Saturation passagère du fournisseur : une seconde chance avant
+        # d'afficher une erreur au visiteur.
+        time.sleep(3)
+        resp = _envoyer(payload)
     if resp.status_code == 404 and "reasoning" in payload:
         # Aucun fournisseur ZDR n'accepte ce réglage de réflexion : on s'en passe.
         payload.pop("reasoning")
@@ -382,6 +411,11 @@ def analyser_carte(
 
     # OpenRouter renvoie parfois une erreur dans un corps en HTTP 200.
     erreur = corps.get("error")
+    if erreur and erreur.get("code") == 429:
+        time.sleep(3)
+        resp = _envoyer(payload)
+        corps = resp.json()
+        erreur = corps.get("error")
     if erreur:
         code = erreur.get("code")
         if code == 429:

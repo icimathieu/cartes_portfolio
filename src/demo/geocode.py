@@ -36,6 +36,7 @@ NIVEAUX = {
     "monument": "monument ou édifice",
     "lieu_dit": "lieu-dit ou quartier",
     "commune": "commune",
+    "departement": "département",
     "echec": "aucun lieu trouvé",
 }
 
@@ -124,8 +125,13 @@ def interroger_nominatim(requete, timeout=15):
     return resultat
 
 
-def geocoder_cascade(commune=None, lieu_dit=None, monument=None):
+def geocoder_cascade(commune=None, lieu_dit=None, monument=None, ancre=None,
+                     departement=None):
     """Géocode le lieu le plus précis possible.
+
+    ancre : coordonnées de la commune déjà connues (référentiel officiel). Elles
+    évitent un appel à Nominatim et, surtout, une commune homonyme à l'autre
+    bout de la France.
 
     Returns:
         dict : niveau, libelle_niveau, lat, lon, adresse, requete, distance_commune_km,
@@ -134,16 +140,18 @@ def geocoder_cascade(commune=None, lieu_dit=None, monument=None):
     """
     rejets = []
     commune_propre = None if _absent(commune) else str(commune).strip()
+    dept = None if _absent(departement) else str(departement).strip()
+    # Le département imprimé sur la carte lève les homonymes de communes.
+    suffixe = f", {dept}, France" if dept else ", France"
 
-    ancre = None
-    if commune_propre:
-        ancre = interroger_nominatim(f"{commune_propre}, France")
+    if ancre is None and commune_propre:
+        ancre = interroger_nominatim(f"{commune_propre}{suffixe}")
 
     for niveau, valeur in (("monument", monument), ("lieu_dit", lieu_dit)):
         if _absent(valeur) or not commune_propre:
             continue
         for terme in _candidats(valeur):
-            requete = f"{terme}, {commune_propre}, France"
+            requete = f"{terme}, {commune_propre}{suffixe}"
             trouve = interroger_nominatim(requete)
             if not trouve:
                 rejets.append({"requete": requete, "raison": "introuvable dans OpenStreetMap"})
@@ -175,10 +183,26 @@ def geocoder_cascade(commune=None, lieu_dit=None, monument=None):
             "lat": ancre["lat"],
             "lon": ancre["lon"],
             "adresse": ancre["adresse"],
-            "requete": f"{commune_propre}, France",
+            "requete": f"{commune_propre}{suffixe}",
             "distance_commune_km": 0.0,
             "rejets": rejets,
         }
+
+    # Dernier recours : la carte nomme un département mais aucune commune
+    # identifiable. Mieux vaut un point à cette échelle qu'aucun point.
+    if dept:
+        trouve = interroger_nominatim(f"{dept}, France")
+        if trouve:
+            return {
+                "niveau": "departement",
+                "libelle_niveau": NIVEAUX["departement"],
+                "lat": trouve["lat"],
+                "lon": trouve["lon"],
+                "adresse": trouve["adresse"],
+                "requete": f"{dept}, France",
+                "distance_commune_km": None,
+                "rejets": rejets,
+            }
 
     return {
         "niveau": "echec",
