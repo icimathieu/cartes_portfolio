@@ -154,7 +154,7 @@ with col_droite:
     )
     st.caption(modeles.MODELES[choix]["detail"])
 
-# Le bouton reste cliquable sans d\u00e9partement : mieux vaut une r\u00e9ponse au clic
+# Le bouton reste cliquable sans département : mieux vaut une réponse au clic
 # qu'un bouton gris dont on ne devine pas ce qui le bloque.
 lancer = st.button(
     "Analyser",
@@ -163,10 +163,12 @@ lancer = st.button(
 )
 
 if lancer and not departement_declare:
-    st.warning(
-        "Indiquez d'abord de quel service d'archives viennent ces cartes : "
-        "c'est ce qui permet de restreindre la recherche \u00e0 un d\u00e9partement.",
-        icon="\ud83d\udccd",
+    st.error(
+        "**Choisissez le département du service d'archives** (menu « De quel "
+        "service d'archives viennent ces cartes ? », à droite) avant de lancer "
+        "l'analyse. Il est obligatoire : c'est lui qui restreint la recherche aux "
+        "communes de ce département, sans quoi une carte peut atterrir à 900 km.",
+        icon="\N{ROUND PUSHPIN}",
     )
     lancer = False
 

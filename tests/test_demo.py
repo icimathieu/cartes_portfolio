@@ -502,3 +502,32 @@ def test_signature_absente_pas_d_avertissement():
     """Sans en-tête User-Agent, mieux vaut se taire que crier au loup."""
     assert not navigateur.refuse_les_cookies_tiers("")
     assert not navigateur.refuse_les_cookies_tiers(None)
+
+
+# --- Texte affichable --------------------------------------------------------
+
+RACINE_SRC = Path(__file__).resolve().parent.parent / "src"
+
+
+def test_aucune_chaine_de_source_n_est_indicible():
+    """Une paire de substituts écrite `\\ud83d\\udccd` n'est pas un émoji.
+
+    Écrite ainsi dans le source, elle traverse la compilation sans bruit mais
+    Streamlit la refuse au moment de l'afficher (« is not a valid emoji »), et
+    la page entière tombe. C'est ce qui cassait l'avertissement « département
+    manquant » de la page Essayer. On vérifie que toute constante textuelle du
+    source est encodable, donc réellement affichable.
+    """
+    import ast
+
+    for fichier in sorted(RACINE_SRC.rglob("*.py")):
+        arbre = ast.parse(fichier.read_text(encoding="utf-8"), filename=str(fichier))
+        for noeud in ast.walk(arbre):
+            if isinstance(noeud, ast.Constant) and isinstance(noeud.value, str):
+                try:
+                    noeud.value.encode("utf-8")
+                except UnicodeEncodeError:  # pragma: no cover - le test échoue
+                    pytest.fail(
+                        f"{fichier.name} ligne {noeud.lineno} : chaîne non encodable "
+                        f"({noeud.value!r})"
+                    )
