@@ -7,7 +7,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from demo import geocode, images, lieux, modeles, quota, vlm  # noqa: E402
+from demo import geocode, images, lieux, modeles, navigateur, quota, vlm  # noqa: E402
 from footer import render_footer  # noqa: E402
 
 MAX_IMAGES_PAR_ESSAI = 5
@@ -64,6 +64,15 @@ with st.expander("J\u2019ai un code d\u2019acc\u00e8s", expanded=False):
         else:
             st.error("Code inconnu.")
 
+
+def _agent_utilisateur():
+    """Signature du navigateur, vide si l'hôte ne la transmet pas."""
+    try:
+        return st.context.headers.get("User-Agent", "")
+    except Exception:
+        return ""
+
+
 # --- Réglages de l'essai ----------------------------------------------------
 
 col_gauche, col_droite = st.columns([3, 2])
@@ -76,6 +85,14 @@ with col_gauche:
         help=f"{MAX_IMAGES_PAR_ESSAI} images au maximum par essai.",
         disabled=not (ouverte and api_key and restantes),
     )
+
+    if navigateur.refuse_les_cookies_tiers(_agent_utilisateur()):
+        st.caption(
+            "Si le t\u00e9l\u00e9versement est refus\u00e9 (erreur 403) : Safari bloque les "
+            "cookies quand la d\u00e9mo est affich\u00e9e dans le cadre de huggingface.co. "
+            "Ouvrez-la en pleine page sur "
+            "[icimathieu-cartes-portfolio.hf.space](https://icimathieu-cartes-portfolio.hf.space/essayer)."
+        )
 
     st.info(
         "**Cette d\u00e9mo ne voit que l\u2019image et le d\u00e9partement que vous indiquez.** "

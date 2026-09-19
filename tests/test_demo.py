@@ -10,7 +10,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from demo import geocode, images, quota, vlm  # noqa: E402
+from demo import geocode, images, navigateur, quota, vlm  # noqa: E402
 
 
 # --- Préparation des images -------------------------------------------------
@@ -472,3 +472,33 @@ def test_liste_des_departements_proposee():
     noms = lieux.liste_departements()
     assert "Vaucluse" in noms and "Gard" in noms
     assert all(nom.strip() for nom in noms)
+
+
+# --- Avertissement « cookies tiers » ----------------------------------------
+
+SAFARI_MAC = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 "
+              "(KHTML, like Gecko) Version/18.0 Safari/605.1.15")
+CHROME_MAC = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36")
+FIREFOX_MAC = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:142.0) "
+               "Gecko/20100101 Firefox/142.0")
+CHROME_IOS = ("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) "
+              "AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/140.0 Mobile/15E148 Safari/604.1")
+
+
+def test_safari_est_averti_du_403():
+    """Lui seul refuse le cookie du cadre : le téléversement y échoue encore."""
+    assert navigateur.refuse_les_cookies_tiers(SAFARI_MAC)
+    assert navigateur.refuse_les_cookies_tiers(CHROME_IOS)
+
+
+def test_les_autres_navigateurs_ne_sont_pas_avertis():
+    """Chrome et Firefox cloisonnent le cookie mais l'acceptent : rien à dire."""
+    assert not navigateur.refuse_les_cookies_tiers(CHROME_MAC)
+    assert not navigateur.refuse_les_cookies_tiers(FIREFOX_MAC)
+
+
+def test_signature_absente_pas_d_avertissement():
+    """Sans en-tête User-Agent, mieux vaut se taire que crier au loup."""
+    assert not navigateur.refuse_les_cookies_tiers("")
+    assert not navigateur.refuse_les_cookies_tiers(None)
