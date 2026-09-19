@@ -1,4 +1,7 @@
-streamlit>=1.40
+# Version figée : l'option server.xsrfCookieSameSite (Dockerfile) n'existe que
+# depuis les versions récentes, et le serveur a changé de socle (Starlette) en
+# cours de route. Relever ce numéro est un geste délibéré, à revérifier en ligne.
+streamlit==1.64.0
 pandas
 Pillow
 requests

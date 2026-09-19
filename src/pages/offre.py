@@ -150,10 +150,6 @@ photographique concernant les provinces iraniennes : lecture automatique des
 légendes en persan, puis localisation. Le code est
 [ouvert](https://github.com/icimathieu/atelier_spatialisation_INHA).
 
-C'est un projet très enrichissant, qui nous permet de mobiliser des outils
-récents et performants que nous rencontrons par ailleurs durant nos cours.
-C'est aussi une façon pour nous de valoriser nos compétences et d'avoir
-une formation très empirique !
 """)
 
 st.markdown("---")
