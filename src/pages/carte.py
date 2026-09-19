@@ -11,8 +11,10 @@ Cette carte présente l'ensemble des cartes postales géolocalisées par la pipe
 Chaque marqueur correspond à une carte postale dont la commune, le lieu-dit
 et/ou le monument ont été identifiés automatiquement puis géoréférencés.
 
-> *Cette carte sera également diffusée sur le site des
-> [Archives départementales du Vaucluse](https://archives.vaucluse.fr/).*
+> *Cette carte est désormais diffusée par les Archives départementales de
+> Vaucluse : [voir la carte sur le site du Département](https://maps.vaucluse.fr/index.php/view/map?repository=archives&project=cartes_postales_vaucluse)
+> et le billet qui lui est consacré,
+> [« Album de Vaucluse : le territoire révélé en cartes postales »](https://memento.vaucluse.fr/toutes-les-ressources/album-de-vaucluse-les-cartes-postales-revelent-le-territoire).*
 """)
 
 st.markdown("---")

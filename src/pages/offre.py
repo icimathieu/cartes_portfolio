@@ -94,9 +94,10 @@ st.subheader("Quel budget prévoir ?")
 
 st.markdown("""
 Les prestations des junior-entreprises se comptent en **JEH** (journée étude
-homme) : une journée de travail d'un intervenant, facturée **250 €** chez nous.
-Une prestation « cartes postales » représente quelques journées par intervenant,
-ce qui place le devis dans une fourchette de **1 000 à 2 000 €**.
+homme) : une journée de travail d'un étudiant membre de l'association, facturée
+**250 €** chez nous. Une prestation « cartes postales » représente quelques
+journées de travail pour chacun d'entre nous, ce qui place le devis dans une
+fourchette de **1 000 à 2 000 €**.
 
 Ce qui fait varier le montant :
 """)
@@ -116,11 +117,6 @@ with col_budget_b:
     - 🎯 **Le niveau de précision** attendu et l'ampleur de la relecture
     """)
 
-st.markdown("""
-Écrivez-nous avec le volume approximatif de votre fonds : nous vous répondons
-avec une estimation chiffrée, sans engagement.
-""")
-
 st.markdown("---")
 
 # --- Pourquoi nous ? ---
@@ -137,7 +133,23 @@ suffisamment convaincu pour que nous décidions de poursuivre le chantier sur
 notre temps personnel : consolidation de la chaîne, benchmark sur 600 cartes annotées,
 intégration finale sur le site des Archives, rédaction d'un billet,
 documentation, généralisation de la méthode, etc.
-            
+
+Le travail est aujourd'hui **publié par les Archives départementales de
+Vaucluse** : 2 779 des 2 928 cartes du fonds figurent sur
+[la carte diffusée par le Département](https://maps.vaucluse.fr/index.php/view/map?repository=archives&project=cartes_postales_vaucluse),
+à laquelle les Archives ont consacré un billet,
+[« Album de Vaucluse : le territoire révélé en cartes postales »](https://memento.vaucluse.fr/toutes-les-ressources/album-de-vaucluse-les-cartes-postales-revelent-le-territoire).
+
+Nous appliquons les mêmes méthodes hors du champ des cartes postales. Nous avons
+animé un **atelier de spatialisation** lors de l'école d'été internationale
+[*De la fermeture au partage : exploration des données de recherche sur le
+patrimoine de l'Afghanistan et des pays voisins*](https://www.inalco.fr/actualites/de-la-fermeture-au-partage-une-ecole-dete-internationale-consacree-au-patrimoine-de)
+(juin 2026, avec le consortium
+[Distam+](https://etudes-areales.cnrs.fr/programme-summer-school/)), sur un fonds
+photographique concernant les provinces iraniennes : lecture automatique des
+légendes en persan, puis localisation. Le code est
+[ouvert](https://github.com/icimathieu/atelier_spatialisation_INHA).
+
 C'est un projet très enrichissant, qui nous permet de mobiliser des outils
 récents et performants que nous rencontrons par ailleurs durant nos cours.
 C'est aussi une façon pour nous de valoriser nos compétences et d'avoir
