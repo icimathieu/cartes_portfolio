@@ -89,6 +89,40 @@ with col_b:
 
 st.markdown("---")
 
+# --- Budget ---
+st.subheader("Quel budget prévoir ?")
+
+st.markdown("""
+Les prestations des junior-entreprises se comptent en **JEH** (journée étude
+homme) : une journée de travail d'un intervenant, facturée **250 €** chez nous.
+Une prestation « cartes postales » représente quelques journées par intervenant,
+ce qui place le devis dans une fourchette de **1 000 à 2 000 €**.
+
+Ce qui fait varier le montant :
+""")
+
+col_budget_a, col_budget_b = st.columns(2)
+
+with col_budget_a:
+    st.markdown("""
+    - 📚 **Le volume du fonds** et l'état de sa numérisation
+    - 🗂️ **La qualité des métadonnées** existantes
+    """)
+
+with col_budget_b:
+    st.markdown("""
+    - ⚙️ **Les options retenues** ci-dessus (numérisation, modèle local,
+      intégration au site, cession du code)
+    - 🎯 **Le niveau de précision** attendu et l'ampleur de la relecture
+    """)
+
+st.markdown("""
+Écrivez-nous avec le volume approximatif de votre fonds : nous vous répondons
+avec une estimation chiffrée, sans engagement.
+""")
+
+st.markdown("---")
+
 # --- Pourquoi nous ? ---
 st.subheader("Qui sommes-nous ? ")
 
@@ -149,6 +183,9 @@ envisager un **pilote sur un échantillon** de votre corpus.
 
 ✉️ **Contact** :
 [mathieu.riviere@chartes.psl.eu](mailto:mathieu.riviere@chartes.psl.eu) · [maxime.letoffe@chartes.psl.eu](mailto:maxime.letoffe@chartes.psl.eu)
+
+🏛️ **CartaData**, la junior-entreprise qui porte la prestation :
+[présentation sur le site de l'École nationale des chartes](https://www.chartes.psl.eu/vie-de-campus/vie-etudiante-et-associative/cartadata)
 """)
 
 st.markdown("---")

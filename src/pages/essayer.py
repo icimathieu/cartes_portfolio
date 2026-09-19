@@ -12,7 +12,7 @@ from footer import render_footer  # noqa: E402
 
 MAX_IMAGES_PAR_ESSAI = 5
 
-st.title("🔧 Essayer la pipeline")
+st.title("🔧 Essayer sur vos cartes")
 
 st.markdown(
     "Téléversez vos cartes postales et indiquez le département de votre service "
@@ -43,7 +43,7 @@ if not ouverte:
 elif not api_key:
     st.warning(
         "La d\u00e9mo est momentan\u00e9ment indisponible. \u00c9crivez-nous et nous vous "
-        "montrons la pipeline sur vos propres cartes.",
+        "montrons la chaîne de traitement sur vos propres cartes.",
         icon="\u23f3",
     )
 
@@ -137,21 +137,21 @@ with col_droite:
     )
     st.caption(modeles.MODELES[choix]["detail"])
 
-col_bouton, col_rappel = st.columns([1, 4])
+# Le bouton reste cliquable sans d\u00e9partement : mieux vaut une r\u00e9ponse au clic
+# qu'un bouton gris dont on ne devine pas ce qui le bloque.
+lancer = st.button(
+    "Analyser",
+    type="primary",
+    disabled=not (fichiers and ouverte and api_key),
+)
 
-with col_bouton:
-    lancer = st.button(
-        "Analyser",
-        type="primary",
-        disabled=not (fichiers and departement_declare and ouverte and api_key),
+if lancer and not departement_declare:
+    st.warning(
+        "Indiquez d'abord de quel service d'archives viennent ces cartes : "
+        "c'est ce qui permet de restreindre la recherche \u00e0 un d\u00e9partement.",
+        icon="\ud83d\udccd",
     )
-
-with col_rappel:
-    if not departement_declare:
-        st.caption(
-            ":orange[Indiquez le service d\u2019archives d\u2019o\u00f9 viennent ces cartes pour "
-            "activer l\u2019analyse.]"
-        )
+    lancer = False
 
 # --- Analyse ----------------------------------------------------------------
 
@@ -281,7 +281,7 @@ with st.expander("Ce que deviennent vos images"):
   indiquez : rien n'est envoyé nulle part pour ça.
 - Les coordonnées viennent de **Nominatim / OpenStreetMap**, interrogé avec les seuls
   noms de lieux détectés, jamais avec votre image.
-- Pour votre fonds, la pipeline peut tourner **entièrement sur nos machines ou sur un
+- Pour votre fonds, la chaîne peut tourner **entièrement sur nos machines ou sur un
   serveur français**, avec un modèle à poids ouverts : dans ce cas aucune donnée ne
   sort de l'infrastructure choisie.
         """

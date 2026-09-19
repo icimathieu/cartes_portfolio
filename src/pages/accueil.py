@@ -111,7 +111,16 @@ Nous adaptons cette chaîne de traitement à votre corpus, de la récupération
 des images à la carte interactive intégrable sur votre site.
 """)
 
-st.page_link("pages/offre.py", label="Découvrir notre offre", icon="🤝")
+st.markdown("""
+Le plus simple pour vous en faire une idée : déposez deux ou trois de vos
+propres cartes postales et regardez où elles se posent.
+""")
+
+col_appel_a, col_appel_b = st.columns(2)
+with col_appel_a:
+    st.page_link("pages/essayer.py", label="Essayer sur vos cartes", icon="🔧")
+with col_appel_b:
+    st.page_link("pages/offre.py", label="Découvrir notre offre", icon="🤝")
 
 st.markdown("---")
 
